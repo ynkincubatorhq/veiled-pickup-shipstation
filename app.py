@@ -13,6 +13,47 @@ st.set_page_config(
     layout="centered",
 )
 
+
+def _require_access_code() -> None:
+    """Gate the app behind a shared access code.
+
+    The code is read from st.secrets["app_password"]. On Streamlit Cloud,
+    set it in the deploy's Advanced settings -> Secrets. Locally, put it
+    in .streamlit/secrets.toml (gitignored). Once entered, the unlock
+    persists for the session.
+    """
+    if st.session_state.get("authed"):
+        return
+
+    st.title("Pickup orders -> ShipStation")
+    st.caption("Enter the access code to continue.")
+    code = st.text_input("Access code", type="password", label_visibility="collapsed")
+    if not code:
+        st.stop()
+
+    expected = ""
+    try:
+        expected = st.secrets.get("app_password", "")
+    except (FileNotFoundError, Exception):  # noqa: BLE001 -- secrets.toml missing
+        expected = ""
+
+    if not expected:
+        st.error(
+            "Access code is not configured. Contact the app owner — "
+            "`app_password` needs to be set in Streamlit Cloud secrets."
+        )
+        st.stop()
+
+    if code != expected:
+        st.error("Incorrect access code.")
+        st.stop()
+
+    st.session_state.authed = True
+    st.rerun()
+
+
+_require_access_code()
+
 st.title("Pickup orders -> ShipStation")
 st.caption(
     "Upload the Shopify orders export. Pickup orders that are NOT 'Ready for "

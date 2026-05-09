@@ -6,6 +6,10 @@ venv/
 .DS_Store
 .pytest_cache/
 
+# Streamlit secrets — never commit. Configure in Streamlit Cloud's
+# deploy settings UI for production; create locally for dev only.
+.streamlit/secrets.toml
+
 # Don't commit real customer data - sample CSVs only
 *.csv
 !tests/sample_orders_export.csv

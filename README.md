@@ -25,11 +25,17 @@ for in-store pickup orders that ShipStation isn't pulling automatically.
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
+mkdir -p .streamlit
+echo 'app_password = "<your-code>"' > .streamlit/secrets.toml
 streamlit run app.py
 ```
 
-Open the URL Streamlit prints, drop a CSV, hit download, upload to ShipStation
-under **Orders -> Import Orders**.
+Open the URL Streamlit prints, enter the access code, drop a CSV, hit
+download, upload to ShipStation under **Orders -> Import Orders**.
+
+`.streamlit/secrets.toml` is gitignored and never leaves your machine.
+The deployed app reads `app_password` from Streamlit Cloud's deploy
+secrets; the value there is the canonical access code.
 
 ## Tests
 

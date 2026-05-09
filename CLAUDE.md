@@ -24,6 +24,7 @@ Hosting: Streamlit Community Cloud (temporary; subject to migration)
 - Recipient (Ship To) is populated from the buyer's Shopify billing address. Pickup-location routing in ShipStation happens via the `Shipping Service` column (set to `config.SHIPPING_SERVICE`), NOT by overriding Ship To. `config.STORE_ADDRESS` is no longer used by the mapper but is retained in config.py as reference in case the routing convention changes back.
 - The output column order in `config.SHIPSTATION_COLUMNS` matches ShipStation's v3 sample import template. Don't reorder without re-verifying against ShipStation's expectation.
 - The test fixture at `tests/sample_orders_export.csv` is **anonymized** — names, emails, addresses, phones, and payment refs have been replaced with synthetic values that preserve the column shape, order IDs, tags, fulfillment statuses, and line-item counts the tests assert on. Do not commit raw Shopify exports here; future fixtures should follow the same anonymization pattern.
+- Access to the deployed app is gated by a shared code read from `st.secrets["app_password"]`. The code is configured in Streamlit Cloud's deploy settings (Advanced → Secrets), NOT in source. For local dev, contributors create `.streamlit/secrets.toml` (gitignored) with the same key. Do NOT hardcode the code in `app.py` or anywhere else in source.
 
 ## Things that will trip you up
 
