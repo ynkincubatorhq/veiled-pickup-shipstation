@@ -120,13 +120,21 @@ def filter_pickup_orders(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def to_shipstation(shopify_df: pd.DataFrame) -> pd.DataFrame:
-    """Convert filtered Shopify rows to ShipStation rows (one row per item)."""
+    """Convert filtered Shopify rows to ShipStation rows (one row per item).
+
+    Recipient (Ship To) is populated from the buyer's Shopify billing
+    address. Pickup-location routing in ShipStation is carried by the
+    Shipping Service column (set to SHIPPING_SERVICE), not by overriding
+    the Ship To address. STORE_ADDRESS in config is no longer used here;
+    kept in config.py as reference in case the routing convention changes.
+    """
     rows = []
     for _, r in shopify_df.iterrows():
         billing_name = _safe(r.get("Billing Name"))
         first, last = _split_name(billing_name)
-        store_name = STORE_ADDRESS["name"]
-        store_first, store_last = _split_name(store_name)
+        billing_phone = _safe(r.get("Billing Phone")) or _safe(r.get("Phone"))
+        billing_addr1 = _safe(r.get("Billing Address1")) or _safe(r.get("Billing Street"))
+        billing_country = _safe(r.get("Billing Country")) or "US"
 
         rows.append({
             "Order #": _safe(r.get("Name")),
@@ -154,20 +162,20 @@ def to_shipstation(shopify_df: pd.DataFrame) -> pd.DataFrame:
             "Buyer First Name": first,
             "Buyer Last Name": last,
             "Buyer Email": _safe(r.get("Email")),
-            "Buyer Phone": _safe(r.get("Billing Phone")) or _safe(r.get("Phone")),
+            "Buyer Phone": billing_phone,
             "Buyer Username": _safe(r.get("Email")),
-            "Recipient Full Name": store_name,
-            "Recipient First Name": store_first,
-            "Recipient Last Name": store_last,
-            "Recipient Phone": STORE_ADDRESS["phone"],
-            "Recipient Company": STORE_ADDRESS["company"],
-            "Address Line 1": STORE_ADDRESS["address_line_1"],
-            "Address Line 2": STORE_ADDRESS["address_line_2"],
-            "Address Line 3": STORE_ADDRESS["address_line_3"],
-            "City": STORE_ADDRESS["city"],
-            "State": STORE_ADDRESS["state"],
-            "Postal Code": STORE_ADDRESS["postal_code"],
-            "Country Code": STORE_ADDRESS["country_code"],
+            "Recipient Full Name": billing_name,
+            "Recipient First Name": first,
+            "Recipient Last Name": last,
+            "Recipient Phone": billing_phone,
+            "Recipient Company": _safe(r.get("Billing Company")),
+            "Address Line 1": billing_addr1,
+            "Address Line 2": _safe(r.get("Billing Address2")),
+            "Address Line 3": "",
+            "City": _safe(r.get("Billing City")),
+            "State": _safe(r.get("Billing Province")),
+            "Postal Code": _safe(r.get("Billing Zip")),
+            "Country Code": billing_country,
             "Item SKU": _safe(r.get("Lineitem sku")),
             "Item Name / Title": _safe(r.get("Lineitem name")),
             "Item Quantity": _safe(r.get("Lineitem quantity")),

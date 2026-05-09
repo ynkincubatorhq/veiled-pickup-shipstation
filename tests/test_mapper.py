@@ -34,12 +34,26 @@ def test_shipstation_columns_match_template(shopify_df):
     assert list(out.columns) == SHIPSTATION_COLUMNS
 
 
-def test_recipient_is_store_address(shopify_df):
-    out = to_shipstation(filter_pickup_orders(shopify_df))
-    assert (out["Address Line 1"] == STORE_ADDRESS["address_line_1"]).all()
-    assert (out["City"] == STORE_ADDRESS["city"]).all()
-    assert (out["State"] == STORE_ADDRESS["state"]).all()
-    assert (out["Postal Code"] == STORE_ADDRESS["postal_code"]).all()
+def test_recipient_is_billing_address(shopify_df):
+    """Recipient (Ship To) is populated from the buyer's Shopify billing
+    address. Pickup-location routing happens via the Shipping Service
+    column, NOT by overriding Ship To = store address. This test catches
+    a regression to the old (mis-)mapping where Ship To pointed at the
+    store."""
+    filtered = filter_pickup_orders(shopify_df).reset_index(drop=True)
+    out = to_shipstation(filtered).reset_index(drop=True)
+
+    expected_addr1 = filtered["Billing Address1"].fillna("").astype(str)
+    expected_city = filtered["Billing City"].fillna("").astype(str)
+    expected_state = filtered["Billing Province"].fillna("").astype(str)
+    expected_zip = filtered["Billing Zip"].fillna("").astype(str)
+
+    assert (out["Address Line 1"] == expected_addr1).all()
+    assert (out["City"] == expected_city).all()
+    assert (out["State"] == expected_state).all()
+    assert (out["Postal Code"] == expected_zip).all()
+    # Regression check: Ship To must NOT be the store address.
+    assert not (out["Address Line 1"] == STORE_ADDRESS["address_line_1"]).any()
 
 
 def test_shipping_service_is_set(shopify_df):
