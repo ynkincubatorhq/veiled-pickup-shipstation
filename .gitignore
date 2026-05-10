@@ -13,3 +13,6 @@ venv/
 # Don't commit real customer data - sample CSVs only
 *.csv
 !tests/sample_orders_export.csv
+
+# Suraya brain: per-project local jsonl emitted by /capture skill
+.observations.jsonl
